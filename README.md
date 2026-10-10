@@ -118,16 +118,15 @@ Live run on 10 Oct 2026 against `kind-clustermate`, model `qwen3.5:4b` via local
 | 4 | Security notes | Snapshot of the broken demo pod | Flags :latest tags, runAsRoot, missing memory limits | Report flagged the missing memory limit and explained a leak can take the node down. | Pass | This pod has neither a `:latest` tag nor `runAsRoot`, so those checks had nothing to flag. |
 | 5 | HTML report | `diagnose.py --html report.html` | Styled report opens in browser | Opened in a browser. Summary, root cause, evidence, suggested fix, security observations, and the Urdu section are all present. Urdu renders as readable text. | Pass | Body text was invisible under the browser dark theme until the report CSS set a white background and dark text. Fenced shell commands render as plain paragraphs. Urdu is coherent, but the first sentence calls the image an انجینئر (engineer) before correctly calling it a تصویر. |
 
+The report from that run (`report.html`):
+
+![ClusterMate diagnosis report](demo/report.png)
+
 **Known limitations**
 - Single-namespace snapshots are fastest; cluster-wide scans on large clusters are slower (tune `--max-pods`, `--tail`).
 - The 4B model occasionally hedges on novel failures — the `references/common-failures.md` cheat-sheet grounds it on the common ones. On this run it identified the bad tag and the right `kubectl` verb, then left the replacement tag as a placeholder.
 - CPU-only inference on this laptop took about 10 minutes per diagnosis with thinking disabled. With Qwen's thinking mode left on, the client hit its timeout before any report was written. Plan the demo around that, or pre-warm the model.
 - The Urdu section is readable, not garbled. It still mixed one wrong word (engineer) into an otherwise correct explanation. A second model run was not spent on that wording.
-
-## Demo
-
-Live demo: deploy the intentionally broken app, snapshot, diagnose offline with the local model, show the Urdu explanation, apply the fix, watch the pod go green — under 3 minutes. Scripted in `demo/demo-script.md`.
-
 
 ## License
 
