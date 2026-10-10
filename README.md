@@ -128,9 +128,6 @@ Live run on 10 Oct 2026 against `kind-clustermate`, model `qwen3.5:4b` via local
 
 Live demo: deploy the intentionally broken app, snapshot, diagnose offline with the local model, show the Urdu explanation, apply the fix, watch the pod go green — under 3 minutes. Scripted in `demo/demo-script.md`.
 
-## Team
-
-- _Add your names and roles here_
 
 ## License
 
