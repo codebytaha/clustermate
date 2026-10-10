@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.log
+/tmp/
+snapshot*.json
+.DS_Store
