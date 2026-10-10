@@ -1,0 +1,28 @@
+# Demo workload: intentionally broken (bad image tag -> ImagePullBackOff).
+# Apply with: kubectl apply -f demo/broken-app.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: clustermate-demo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: broken-web
+  namespace: clustermate-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: broken-web
+  template:
+    metadata:
+      labels:
+        app: broken-web
+    spec:
+      containers:
+        - name: web
+          # NOTE: this tag does not exist on purpose — the demo diagnosis target.
+          image: nginx:9.9.9-nonexistent
+          ports:
+            - containerPort: 80
