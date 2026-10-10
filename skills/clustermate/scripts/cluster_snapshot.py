@@ -85,8 +85,8 @@ def main():
     if not shutil.which("kubectl"):
         sys.exit("error: kubectl not found on PATH. Install kubectl and point it at a cluster.")
 
-    ns_all = [] if args.namespace else ["-A"]
-    ns_one = ["-n", args.namespace] if args.namespace else []
+    # -n scopes pods and events; omitting it scans every namespace.
+    ns_flag = ["-n", args.namespace] if args.namespace else ["-A"]
     snapshot = {"nodes": [], "unhealthy_pods": [], "events": [], "security_notes": [], "warnings": []}
 
     # Nodes
@@ -101,7 +101,7 @@ def main():
         sys.exit("error: cannot reach cluster: %s" % r["error"])
 
     # Pods -> keep only unhealthy ones
-    r = run(["kubectl", "get", "pods"] + ns_all + ["-o", "json"])
+    r = run(["kubectl", "get", "pods"] + ns_flag + ["-o", "json"])
     pods = []
     if r.get("ok"):
         try:
@@ -147,7 +147,7 @@ def main():
     snapshot["security_notes"] = snapshot["security_notes"][:20]
 
     # Recent events (most signal-dense source for scheduling/image failures)
-    r = run(["kubectl", "get", "events"] + ns_all + ["--sort-by=.metadata.creationTimestamp", "-o", "json"])
+    r = run(["kubectl", "get", "events"] + ns_flag + ["--sort-by=.metadata.creationTimestamp", "-o", "json"])
     if r.get("ok"):
         try:
             items = json.loads(r["data"]).get("items", [])

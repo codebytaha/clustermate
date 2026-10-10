@@ -1,0 +1,22 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'><title>ClusterMate diagnosis report</title><style>html{color-scheme:light}body{font-family:system-ui,sans-serif;max-width:760px;margin:2em auto;padding:0 1em;line-height:1.6;background:#fff;color:#111827}h2{color:#1a56db;border-bottom:2px solid #1a56db;padding-bottom:.2em}code{background:#f3f4f6;color:#111827;padding:.15em .4em;border-radius:4px}li{margin:.3em 0}</style></head><body><h1>🐳 ClusterMate diagnosis report</h1><h2>Summary (one paragraph, what is broken)</h2>
+<p>The pod <code>broken-web-6947985cb4-v9tb5</code> in the <code>clustermate-demo</code> namespace is stuck in a <code>Pending</code> state because Kubernetes cannot pull the container image. The application is trying to run an image named <code>nginx:9.9.9-nonexistent</code>, which does not exist on the Docker registry, causing the pod to fail repeatedly with an <code>ImagePullBackOff</code> error.</p>
+<h2>Root cause (the single most likely cause)</h2>
+<p>The root cause is that the image tag specified in the Deployment configuration (<code>nginx:9.9.9-nonexistent</code>) is incorrect or fictional; this specific image does not exist on the registry, so Kubernetes cannot download it to run the container.</p>
+<h2>Evidence (bullet list mapping each claim to snapshot data)</h2>
+<li><b>Pod State</b>: The pod <code>broken-web-6947985cb4-v9tb5</code> has a phase of <code>Pending</code>, meaning it is waiting for resources but not running yet.</li>
+<li><b>Container State</b>: Inside the container named <code>web</code>, the state is <code>ImagePullBackOff</code>, indicating Kubernetes tried to fetch the image but failed.</li>
+<li><b>Specific Error</b>: The event logs explicitly state: <code>Failed to pull image &quot;nginx:9.9.9-nonexistent&quot;: ... docker.io/library/nginx:9.9.9-nonexistent: not found</code>.</li>
+<li><b>Retry Behavior</b>: The pod has been in a &quot;Back-off&quot; loop (14 attempts), trying to pull the same non-existent image over time.</li>
+<li><b>Missing Image</b>: There is no evidence of a <code>CreateContainerConfigError</code> (missing config map) or <code>OOMKilled</code> (memory issues); the failure is strictly about the image not being found.</li>
+<h2>Suggested fix (numbered kubectl commands, copy-paste ready)</h2>
+<li> <b>Verify the image tag</b>: Check if the tag <code>9.9.9-nonexistent</code> actually exists on your registry. Run:</li>
+<p>docker pull nginx:9.9.9-nonexistent</p>
+<p># If this fails with &quot;manifest unknown&quot; or similar, the tag is wrong.</p>
+<li> <b>Fix the Deployment</b>: Once you know the correct tag (e.g., <code>nginx:latest</code> or a specific version like <code>1.25-alpine</code>), update your deployment to use it. Replace <code>&lt;correct-tag&gt;</code> with your actual valid tag:</li>
+<p>kubectl set image deployment/broken-web web=nginx:&lt;correct-tag&gt; -n clustermate-demo</p>
+<li> <b>Verify the fix</b>: Watch the pod status to ensure it moves from <code>Pending</code> to <code>Running</code>:</li>
+<p>kubectl get pods -n clustermate-demo -w</p>
+<h2>اردو میں وضاحت (explain the problem and fix in simple Urdu, 4-6 sentences)</h2>
+<p>آپ کے کلسٹر میں ایک پاد (pod) تیار نہیں ہو رہا کیونکہ اسے چلانا جانے والا انجینئر کا نام غلط ہے۔ سسٹم نے <code>nginx:9.9.9-nonexistent</code> نامی تصویر کو ڈاؤن لوڈ کرنے کی کوشش کی لیکن وہ موجود نہیں ہے، جس کی وجہ سے پاد &quot;Pending&quot; حالت میں رہ گیا ہے۔ آپ کو پہلے یہ چیک کرنا ہوگا کہ آپ کے ریجسٹری میں صحیح انجینئر کا نام کیا ہے۔ اگر آپ نے غلط ٹیگ استعمال کی ہے تو <code>kubectl set image</code> کامینڈ کے ذریعے اسے درست ٹیگ سے تبدیل کریں اور پھر دوبارہ چیک کریں کہ پاد اب چل رہا ہے یا نہیں۔</p>
+<h2>Security observations (bullet list, plain language — what to fix and why it matters)</h2>
+<li><b>Missing Memory Limit</b>: The security notes warn that the container has no memory limit set. This is dangerous because if the application uses too much memory, it could crash the entire node (the computer running the pod), affecting other services on that machine. You should add a <code>resources.limits.memory</code> setting to prevent this.</li></body></html>

@@ -61,13 +61,16 @@ def ollama_generate(model, prompt):
         "model": model,
         "prompt": SYSTEM_PROMPT + "\n\n## Cluster snapshot\n```json\n" + prompt + "\n```" + load_reference(),
         "stream": False,
+        # Qwen3.5 thinks before answering. On CPU that blows past the request
+        # timeout before any report is written. The diagnosis itself is the answer.
+        "think": False,
         "options": {"num_ctx": NUM_CTX, "temperature": 0.2},
     }).encode()
     req = urllib.request.Request(
         OLLAMA_URL + "/api/generate", data=body,
         headers={"Content-Type": "application/json"}, method="POST")
     try:
-        with urllib.request.urlopen(req, timeout=600) as resp:
+        with urllib.request.urlopen(req, timeout=1200) as resp:
             return json.loads(resp.read().decode())["response"]
     except urllib.error.URLError:
         sys.exit(
@@ -108,9 +111,10 @@ def to_html(body_markdown, title="ClusterMate diagnosis report"):
             out.append("<p>%s</p>" % inline(s))
     return ("<!DOCTYPE html><html><head><meta charset='utf-8'>"
             "<title>%s</title><style>"
-            "body{font-family:system-ui,sans-serif;max-width:760px;margin:2em auto;padding:0 1em;line-height:1.6}"
+            "html{color-scheme:light}"
+            "body{font-family:system-ui,sans-serif;max-width:760px;margin:2em auto;padding:0 1em;line-height:1.6;background:#fff;color:#111827}"
             "h2{color:#1a56db;border-bottom:2px solid #1a56db;padding-bottom:.2em}"
-            "code{background:#f3f4f6;padding:.15em .4em;border-radius:4px}"
+            "code{background:#f3f4f6;color:#111827;padding:.15em .4em;border-radius:4px}"
             "li{margin:.3em 0}</style></head><body><h1>🐳 %s</h1>%s</body></html>"
             % (_html.escape(title), _html.escape(title), "\n".join(out)))
 
